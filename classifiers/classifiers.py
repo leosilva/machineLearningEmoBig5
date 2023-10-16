@@ -27,9 +27,9 @@ def get_models(which_models):
         },
         'random-forest': {
             RandomForestClassifier(): {
-                'max_depth': [5, 10, 15, 25, 50, None],
+                'max_depth': [5, 10, 20, 50, 100, None],
                 'n_estimators':  [500, 1000, 1500],
-                'min_samples_leaf': [1, 5, 10, 20],
+                'min_samples_leaf': [5, 10, 20, 50, 100],
                 # 'criterion': ['gini', 'entropy'],
                 # 'class_weight':[None, 'balanced', 'balanced_subsample'],
                 'random_state': [RANDOM_STATE]
@@ -53,9 +53,10 @@ def get_models(which_models):
         },
         'decision-tree': {
             DecisionTreeClassifier() : {
-                'max_depth': [3, 5, 7, 9, 10, 15, 25, 50, 100],
-                'criterion': ['gini', 'entropy'],
-                'class_weight': [None, 'balanced'],
+                'max_depth': [3, 5, 10, 20, 50, 100],
+                # 'criterion': ['gini', 'entropy'],
+                'min_samples_leaf': [5, 10, 20, 50, 100],
+                # 'class_weight': [None, 'balanced'],
                 'random_state': [RANDOM_STATE]
             }
         },
