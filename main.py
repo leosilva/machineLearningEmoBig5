@@ -159,7 +159,8 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--is_test", help="Is the script running in TEST mode?")
     parser.add_argument("-m", "--models", help="Which models should run?",
                         choices=['svc', 'logistic-regression', 'random-forest',
-                                 'multinomial-nb', 'decision-tree', 'mlp-classifier'])
+                                 'multinomial-nb', 'bernoulli-nb', 'gaussian-nb', 'complement-nb',
+                                 'decision-tree', 'mlp-classifier'])
     parser.add_argument("-b", "--is_balance",
                         help="Do you wish the script to perform balance strategies (SMOTE, UnderSampling, etc) for the dataset?")
 

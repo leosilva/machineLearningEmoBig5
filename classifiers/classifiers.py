@@ -1,5 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB, GaussianNB, ComplementNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
@@ -43,6 +43,30 @@ def get_models(which_models):
                 # 'random_state': [RANDOM_STATE]
             }
         },
+        'bernoulli-nb': {
+            BernoulliNB(): {
+                'alpha': [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
+                # "gamma": ['auto'],
+                # "C": [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 10, 100, 200, 1000, 1500, 1700, 2000],
+                # 'random_state': [RANDOM_STATE]
+            }
+        },
+        'gaussian-nb': {
+            GaussianNB(): {
+                'var_smoothing': np.logspace(0, -9, num=100),
+                # "gamma": ['auto'],
+                # "C": [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 10, 100, 200, 1000, 1500, 1700, 2000],
+                # 'random_state': [RANDOM_STATE]
+            }
+        },
+        'complement-nb': {
+            ComplementNB(fit_prior=True): {
+                'alpha': [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
+                # "gamma": ['auto'],
+                # "C": [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 10, 100, 200, 1000, 1500, 1700, 2000],
+                # 'random_state': [RANDOM_STATE]
+            }
+        },
         'logistic-regression': {
             LogisticRegression(max_iter=100000, multi_class='multinomial'): {
                 'solver': ['lbfgs'],
@@ -62,8 +86,8 @@ def get_models(which_models):
         },
         'mlp-classifier': {
             MLPClassifier() : {
-                'solver': ['lbfgs', 'sgd', 'adam'],
-                'max_iter': [1000,1500,2000],
+                'solver': ['adam'],
+                'max_iter': [100000],
                 'alpha': 10.0 ** -np.arange(1, 10),
                 'hidden_layer_sizes':np.arange(10, 15),
                 'random_state':[RANDOM_STATE]
