@@ -39,6 +39,8 @@ def run(is_test, is_balance, which_models):
 
         models = cl.get_models(which_models)
 
+        gc.collect()
+
         print("Running models...")
         for item in models.items():
             hyperparams = item[1]
@@ -48,6 +50,8 @@ def run(is_test, is_balance, which_models):
             if is_balance == 'True' and 'class_weight' in hyperparams.keys():
                 del hyperparams['class_weight']
 
+            gc.collect()
+
             for balance in param_dict['balance']:
                 if is_balance == 'True':
                     (X, y) = ba.perform_corpus_balance(X, y, balance)
@@ -55,6 +59,8 @@ def run(is_test, is_balance, which_models):
                     balance = 'not-balanced'
 
                 print("Calculating percentage of features...")
+
+                gc.collect()
                 for p in param_dict['percentage_features']:
                     num_features = int((len(X.columns) * p) / 100)
 
@@ -66,6 +72,8 @@ def run(is_test, is_balance, which_models):
                         X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                                             test_size=0.2,
                                                                             random_state=RANDOM_STATE)
+
+                        gc.collect()
 
                         for train_index, test_index in cv.split(X_train, y_train):
                             X_train_cv = X.iloc[train_index]
@@ -87,10 +95,14 @@ def run(is_test, is_balance, which_models):
 
                                     # svm = svc.run(X_train_cv, y_train_cv)
 
+                                    gc.collect()
+
                                     grid_search = ut.perform_grid_search(model, hyperparams, cv, X_train_cv, y_train_cv)
                                     end = time.time()
                                     best_model = grid_search.best_estimator_
                                     print("Training time: {}".format(end - start))
+
+                                    gc.collect()
 
                                     start = time.time()
                                     metrics = cross_validate(estimator=best_model,
@@ -131,6 +143,8 @@ def run(is_test, is_balance, which_models):
 
                                     # predictions = best_model.predict(X_test_cv)
                                     # print(classification_report(y_test_cv.astype('int'), predictions))
+
+                                    gc.collect()
 
                                     predictions = best_model.predict(X_test_cv)
                                     print(classification_report(y_test_cv.astype('int'), predictions))
