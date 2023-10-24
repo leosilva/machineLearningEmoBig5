@@ -13,9 +13,9 @@ def get_general_parameters(is_test):
     else:
         print("Executing in PROD mode...")
         return {
-            "ngram": [(1,1), (1,2)],
+            "ngram": [(1,2)],
             "balance": ['over', 'under', 'mixed', 'smote'],
-            "percentage_features": [10, 15, 20, 30], #, 40, 50, 60, 70, 80, 90, 95],
+            "percentage_features": [5, 10, 15], #, 40, 50, 60, 70, 80, 90, 95],
             "feature_selection": ['kbest'], #, 'percentile'],
             "folds": [5, 10]
         }
