@@ -15,7 +15,7 @@ def get_general_parameters(is_test):
         return {
             "ngram": [(1,2)],
             "balance": ['over', 'under', 'mixed', 'smote'],
-            "percentage_features": [1, 3, 5, 10], #, 40, 50, 60, 70, 80, 90, 95],
+            "percentage_features": [5, 10], #, 40, 50, 60, 70, 80, 90, 95],
             "feature_selection": ['kbest'], #, 'percentile'],
             "folds": [5, 10]
         }
