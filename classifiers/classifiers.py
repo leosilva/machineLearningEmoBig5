@@ -27,9 +27,9 @@ def get_models(which_models):
         },
         'random-forest': {
             RandomForestClassifier(): {
-                'max_depth': [5, 10, 20, 50, 100, None],
-                'n_estimators':  [500, 1000, 1500],
-                'min_samples_leaf': [5, 10, 20, 50, 100],
+                # 'max_depth': [5, 10, 20, 50, 100, None],
+                'n_estimators':  [5, 20, 50, 100],
+                # 'min_samples_leaf': [5, 10, 20, 50, 100],
                 # 'criterion': ['gini', 'entropy'],
                 # 'class_weight':[None, 'balanced', 'balanced_subsample'],
                 'random_state': [RANDOM_STATE]
