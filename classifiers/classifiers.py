@@ -88,8 +88,8 @@ def get_models(which_models):
             MLPClassifier() : {
                 'solver': ['adam'],
                 'max_iter': [100000],
-                'alpha': 10.0 ** -np.arange(1, 10),
-                'hidden_layer_sizes':np.arange(10, 15),
+                # 'alpha': 10.0 ** -np.arange(1, 10),
+                # 'hidden_layer_sizes':np.arange(10, 15),
                 'random_state':[RANDOM_STATE]
             }
         }
