@@ -8,21 +8,18 @@ import utils as ut
 import numpy as np
 
 
-RANDOM_STATE = ut.get_random_state()
-
 # implementar outros classifiers, como SGDClassifier e GradientBoostingClassifier
 def get_models(which_models):
     result = {}
 
     models = {
         'svc': {
-            SVC(): {
+            SVC(probability=True): {
                 'C': [0.1, 1, 10],
                 'kernel': ['rbf'],
                 # 'gamma': ['auto'],
                 # 'class_weight': ['balanced'], # se a opcao de execucao for -b True, este parametro eh removido
-                'probability': [True],
-                'random_state': [RANDOM_STATE]
+                'probability': [True]
             }
         },
         'random-forest': {
@@ -31,8 +28,7 @@ def get_models(which_models):
                 'n_estimators':  [5, 20, 50, 100],
                 # 'min_samples_leaf': [5, 10, 20, 50, 100],
                 # 'criterion': ['gini', 'entropy'],
-                # 'class_weight':[None, 'balanced', 'balanced_subsample'],
-                'random_state': [RANDOM_STATE]
+                # 'class_weight':[None, 'balanced', 'balanced_subsample']
             }
         },
         'multinomial-nb': {
@@ -71,8 +67,7 @@ def get_models(which_models):
             LogisticRegression(max_iter=100000, multi_class='multinomial'): {
                 'solver': ['lbfgs'],
                 'penalty': [None, 'l2'],
-                'C': [0.1, 1, 10],
-                'random_state': [RANDOM_STATE]
+                'C': [0.1, 1, 10]
             }
         },
         'decision-tree': {
@@ -80,8 +75,7 @@ def get_models(which_models):
                 'max_depth': [3, 5, 10, 20, 50, 100],
                 # 'criterion': ['gini', 'entropy'],
                 'min_samples_leaf': [5, 10, 20, 50, 100],
-                # 'class_weight': [None, 'balanced'],
-                'random_state': [RANDOM_STATE]
+                # 'class_weight': [None, 'balanced']
             }
         },
         'mlp-classifier': {
@@ -89,8 +83,7 @@ def get_models(which_models):
                 'solver': ['adam'],
                 'max_iter': [100000],
                 # 'alpha': 10.0 ** -np.arange(1, 10),
-                # 'hidden_layer_sizes':np.arange(10, 15),
-                'random_state':[RANDOM_STATE]
+                # 'hidden_layer_sizes':np.arange(10, 15)
             }
         }
     }

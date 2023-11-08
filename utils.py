@@ -8,22 +8,20 @@ def perform_grid_search(model, params, cv, X_train_selected, y_train_cv):
 
     return grid_search
 
-def get_random_state():
-    return 42
 
-def save_df_to_csv(df):
+def save_df_to_csv(df, folder):
     best_model = df.head(1)
     model_name = best_model['Algorithm'].values[0]
 
-    filename = 'best_models/' + model_name + '.csv'
+    filename = 'best_models/' + folder + '/' + model_name + '.csv'
     print(filename)
     df.to_csv(filename, index=None, sep=';', mode='w')
 
 
-def save_best_model(result_df):
+def save_best_model(result_df, folder):
     best_model = result_df.head(1)
     m = best_model['Model'].iloc[0]
     model_name = best_model['Algorithm'].values[0]
 
-    filename = 'best_models/best_model_' + model_name + '.pkl'
+    filename = 'best_models/' + folder + '/' + 'best_model_' + model_name + '.pkl'
     joblib.dump(m, filename)

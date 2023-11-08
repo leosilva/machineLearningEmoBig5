@@ -20,11 +20,11 @@ def select_features_kbest(num_features, X_train, X_test, y_train):
     return [X_train_selected, X_test_selected]
 
 
-def perform_features_selection(fea, p, num_features, X_train_cv, X_test_cv, y_train_cv):
+def perform_features_selection(fea, X_train_cv, X_test_cv, y_train_cv):
     if fea == 'kbest':
-        (X_train_selected, X_test_selected) = select_features_kbest(num_features, X_train_cv,
+        (X_train_selected, X_test_selected) = select_features_kbest(X_train_cv,
                                                                     X_test_cv, y_train_cv)
     elif fea == 'percentile':
-        (X_train_selected, X_test_selected) = select_features_percentile(p, X_train_cv,
+        (X_train_selected, X_test_selected) = select_features_percentile(X_train_cv,
                                                                          X_test_cv, y_train_cv)
     return [X_train_selected, X_test_selected]

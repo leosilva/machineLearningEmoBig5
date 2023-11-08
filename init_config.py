@@ -4,11 +4,11 @@ def get_general_parameters(is_test):
     if is_test == 'True':
         print("Executing in TEST mode...")
         return {
-            "ngram": [(1,2)],
-            "balance": ['over'],
-            "percentage_features": [10],
-            "feature_selection": ['kbest'],
-            "folds": [5]
+            # "ngram": [(1,2)],
+            "balance": [''],
+            # "percentage_features": [10],
+            "feature_selection": ['none'],
+            "folds": [10, 10, 10]
         }
     else:
         print("Executing in PROD mode...")
@@ -29,13 +29,13 @@ def get_result_map():
         "Recall": [],
         "F1 Score": [],
         "AUC": [],
-        "Ngram": [],
-        "Vect. Strategy": [],
+        # "Ngram": [],
+        # "Vect. Strategy": [],
         "Bal. Strategy": [],
-        "% of Features": [],
+        # "% of Features": [],
         "Folds": [],
         "Feat. Selec. Strategy": [],
-        "Hyper Params.": [],
+        # "Hyper Params.": [],
         "Model": []
     }
     return result_map

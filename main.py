@@ -16,10 +16,12 @@ from sklearn.metrics import classification_report
 import classifiers.svc as svc
 
 
+# dataset_filename = 'exported_emo_big5.csv_AgglomerativeClustering_3'
+dataset_filename = 'exported_emo_big5_norm.csv_KMeans_2_7'
+
+
 import warnings
 warnings.filterwarnings('ignore')
-
-RANDOM_STATE = ut.get_random_state()
 
 
 def run(is_test, is_balance, which_models):
@@ -30,134 +32,134 @@ def run(is_test, is_balance, which_models):
     result_map = init.get_result_map()
 
     # read files and create corpus
-    (data_train, data_test) = rd.create_corpus('dataset/train_data_size_3100.csv', 'dataset/test_data_size_343.csv')
+    data_train = rd.create_corpus('dataset/' + dataset_filename + '.csv')
 
-    for ngram in param_dict['ngram']:
-        [X, y] = vt.tfidf_vectorizer(data_train, ngram)
-        X = pd.DataFrame(X.toarray())
-        y = pd.DataFrame(y)
+    # print(data_train)
 
-        models = cl.get_models(which_models)
+    # [X, y] = vt.tfidf_vectorizer(data_train, ngram)
+    X = pd.DataFrame(data_train[['fear','anger','anticipation','trust','surprise','sadness',
+                                 'disgust','joy','o_score','c_score','e_score','a_score','n_score']])
+    y = pd.DataFrame(data_train['cluster'])
+
+    models = cl.get_models(which_models)
+
+    gc.collect()
+
+    print("Running models...")
+    for item in models.items():
+        hyperparams = item[1]
+        model = item[0]
+        model_name = model.__class__.__name__
 
         gc.collect()
 
-        print("Running models...")
-        for item in models.items():
-            hyperparams = item[1]
-            model = item[0]
-            model_name = model.__class__.__name__
-
-            if is_balance == 'True' and 'class_weight' in hyperparams.keys():
-                del hyperparams['class_weight']
+        for balance in param_dict['balance']:
+            if is_balance == 'True':
+                (X, y) = ba.perform_corpus_balance(X, y, balance)
+            else:
+                balance = 'not-balanced'
 
             gc.collect()
 
-            for balance in param_dict['balance']:
-                if is_balance == 'True':
-                    (X, y) = ba.perform_corpus_balance(X, y, balance)
-                else:
-                    balance = 'not-balanced'
+            print("Folding with KFold...")
+            for f in param_dict['folds']:
+                random_state = np.random.seed(None)
+                cv = KFold(n_splits=f, shuffle=True)
 
-                print("Calculating percentage of features...")
+                print("Train test split...")
+                X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                                    test_size=0.2,
+                                                                    random_state=random_state)
 
                 gc.collect()
-                for p in param_dict['percentage_features']:
-                    num_features = int((len(X.columns) * p) / 100)
 
-                    print("Folding with KFold...")
-                    for f in param_dict['folds']:
-                        cv = KFold(n_splits=f, shuffle=True)
+                for train_index, test_index in cv.split(X_train, y_train):
+                    X_train_cv = X.iloc[train_index]
+                    X_test_cv = X.iloc[test_index]
+                    y_train_cv = y.iloc[train_index]
+                    y_test_cv = y.iloc[test_index]
 
-                        print("Train test split...")
-                        X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                                            test_size=0.2,
-                                                                            random_state=RANDOM_STATE)
+                    for fea in param_dict['feature_selection']:
+                        if fea != 'none':
+                            print("Performing feature selection...")
+                            (X_train_cv, X_test_cv) = fs.perform_features_selection(fea, X_train_cv,
+                                                                                 X_test_cv,
+                                                                                 y_train_cv.astype('int'))
+                        else:
+                            start = time.time()
+                            print("Running model {}".format(model_name))
+                            print(X_train_cv.shape)
+                            print(y_train_cv.shape)
 
-                        gc.collect()
+                            model = model.fit(X_train_cv, y_train_cv.astype('int').values.ravel())
 
-                        for train_index, test_index in cv.split(X_train, y_train):
-                            X_train_cv = X.iloc[train_index]
-                            X_test_cv = X.iloc[test_index]
-                            y_train_cv = y.iloc[train_index]
-                            y_test_cv = y.iloc[test_index]
+                            gc.collect()
 
-                            for fea in param_dict['feature_selection']:
-                                if fea != 'none':
-                                    (X_train_cv, X_test_cv) = fs.perform_features_selection(fea, p,
-                                                                                         num_features, X_train_cv,
-                                                                                         X_test_cv,
-                                                                                         y_train_cv.astype('int'))
+                            # grid_search = ut.perform_grid_search(model, hyperparams, cv, X_train_cv, y_train_cv)
+                            end = time.time()
+                            # best_model = grid_search.best_estimator_
+                            print("Training time: {}".format(end - start))
 
-                                    start = time.time()
-                                    print("Running model {}".format(model_name))
-                                    print(X_train_cv.shape)
-                                    print(y_train_cv.shape)
+                            gc.collect()
 
-                                    # svm = svc.run(X_train_cv, y_train_cv)
+                            start = time.time()
+                            metrics = cross_validate(estimator=model,
+                                                     X=X_train_cv.values,
+                                                     y=y_train_cv.astype('int').values.ravel(),
+                                                     cv=cv,
+                                                     scoring=init.get_default_scoring(),
+                                                     error_score="raise")
 
-                                    gc.collect()
+                            # print(metrics)
 
-                                    grid_search = ut.perform_grid_search(model, hyperparams, cv, X_train_cv, y_train_cv)
-                                    end = time.time()
-                                    best_model = grid_search.best_estimator_
-                                    print("Training time: {}".format(end - start))
+                            end = time.time()
+                            print("Cross validate time: {}".format(end - start))
 
-                                    gc.collect()
+                            # model_svm_acc = cross_val_score(estimator=best_model, X=X_train_cv,
+                            #                                 y=y_train_cv.astype('int').values.ravel(),
+                            #                                 cv=cv, n_jobs=-1)
+                            # print(np.mean(model_svm_acc))
 
-                                    start = time.time()
-                                    metrics = cross_validate(estimator=best_model,
-                                                             X=X_train_cv,
-                                                             y=y_train_cv.astype('int').values.ravel(),
-                                                             cv=cv,
-                                                             scoring=init.get_default_scoring())
-                                    end = time.time()
-                                    print("Cross validate time: {}".format(end - start))
+                            result_map["Algorithm"].append(model_name)
+                            result_map["Accuracy"].append(round(np.mean(metrics['test_accuracy']), 4))
+                            result_map["Precision"].append(round(np.mean(metrics['test_precision']), 4))
+                            result_map["Recall"].append(round(np.mean(metrics['test_recall']), 4))
+                            result_map["F1 Score"].append(round(np.mean(metrics['test_f1_score']), 4))
+                            result_map["AUC"].append(round(np.mean(metrics['test_roc_auc']), 4))
+                            # result_map["Ngram"].append(ngram)
+                            # result_map["Vect. Strategy"].append('TF-IDF')
+                            result_map["Bal. Strategy"].append(balance)
+                            # result_map["% of Features"].append(p)
+                            result_map["Folds"].append(f)
+                            result_map["Feat. Selec. Strategy"].append(fea)
+                            # result_map["Hyper Params."].append(grid_search.best_params_)
+                            result_map["Model"].append(model)
+                            pd.set_option('display.max_colwidth', None)
+                            pd.set_option('display.max_columns', None)
+                            temp_df = pd.DataFrame(result_map)
+                            print(temp_df.tail(1).T)
+                            #
+                            # print(X_test_cv.shape)
+                            # print(y_test_cv.shape)
+                            # print(y_test_cv.value_counts())
 
-                                    # model_svm_acc = cross_val_score(estimator=best_model, X=X_train_cv,
-                                    #                                 y=y_train_cv.astype('int').values.ravel(),
-                                    #                                 cv=cv, n_jobs=-1)
-                                    # print(np.mean(model_svm_acc))
+                            # predictions = best_model.predict(X_test_cv)
+                            # print(classification_report(y_test_cv.astype('int'), predictions))
 
-                                    result_map["Algorithm"].append(model_name)
-                                    result_map["Accuracy"].append(round(np.mean(metrics['test_accuracy']), 4))
-                                    result_map["Precision"].append(round(np.mean(metrics['test_precision']), 4))
-                                    result_map["Recall"].append(round(np.mean(metrics['test_recall']), 4))
-                                    result_map["F1 Score"].append(round(np.mean(metrics['test_f1_score']), 4))
-                                    result_map["AUC"].append(round(np.mean(metrics['test_roc_auc']), 4))
-                                    result_map["Ngram"].append(ngram)
-                                    result_map["Vect. Strategy"].append('TF-IDF')
-                                    result_map["Bal. Strategy"].append(balance)
-                                    result_map["% of Features"].append(p)
-                                    result_map["Folds"].append(f)
-                                    result_map["Feat. Selec. Strategy"].append(fea)
-                                    result_map["Hyper Params."].append(grid_search.best_params_)
-                                    result_map["Model"].append(best_model)
-                                    pd.set_option('display.max_colwidth', None)
-                                    pd.set_option('display.max_columns', None)
-                                    temp_df = pd.DataFrame(result_map)
-                                    print(temp_df.tail(1).T)
-                                    #
-                                    # print(X_test_cv.shape)
-                                    # print(y_test_cv.shape)
-                                    # print(y_test_cv.value_counts())
+                            gc.collect()
 
-                                    # predictions = best_model.predict(X_test_cv)
-                                    # print(classification_report(y_test_cv.astype('int'), predictions))
+                            predictions = model.predict(X_test_cv)
+                            print(classification_report(y_test_cv.astype('int'), predictions))
 
-                                    gc.collect()
+                            # print(y_test_cv.value_counts())
 
-                                    predictions = best_model.predict(X_test_cv)
-                                    print(classification_report(y_test_cv.astype('int'), predictions))
-
-                                    # print(y_test_cv.value_counts())
-
-                                    gc.collect()
+                            gc.collect()
 
     result_df = pd.DataFrame(result_map)
     result_df.sort_values(by='Accuracy', ascending=False, inplace=True)
 
-    ut.save_df_to_csv(result_df)
-    ut.save_best_model(result_df)
+    ut.save_df_to_csv(result_df, dataset_filename)
+    ut.save_best_model(result_df, dataset_filename)
 
     utc_dtf = datetime.now(timezone.utc)
     print("GENERAL ANALYSIS ending at {}".format(utc_dtf.astimezone().isoformat()))
