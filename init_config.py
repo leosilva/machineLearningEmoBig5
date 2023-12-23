@@ -6,9 +6,22 @@ def get_general_parameters(is_test):
         return {
             # "ngram": [(1,2)],
             "balance": [''],
-            # "percentage_features": [10],
-            "feature_selection": ['none'],
-            "folds": [10, 10, 10]
+            "percentage_features": [
+                # 50,
+                # 60,
+                # 70,
+                # 80,
+                100
+            ],
+            "feature_selection": ['kbest'],
+            "folds": [10],
+            "feature_to_include": [
+                'o_score', # nao considera esta feature, eh somente para entrar na funcao
+                # 'c_score',
+                # 'e_score',
+                # 'a_score',
+                # 'n_score'
+            ]
         }
     else:
         print("Executing in PROD mode...")
@@ -24,17 +37,27 @@ def get_general_parameters(is_test):
 def get_result_map():
     result_map = {
         "Algorithm": [],
-        "Accuracy": [],
-        "Precision": [],
-        "Recall": [],
-        "F1 Score": [],
+        "Train Accuracy": [],
+        "Train Precision": [],
+        "Train Recall": [],
+        "Train F1 Score": [],
+        "Test Accuracy": [],
+        "Test Precision": [],
+        "Test Recall": [],
+        "Test F1 Score": [],
+        "Val. Accuracy": [],
+        "Val. Precision": [],
+        "Val. Recall": [],
+        "Val. F1 Score": [],
         "AUC": [],
         # "Ngram": [],
         # "Vect. Strategy": [],
         "Bal. Strategy": [],
-        # "% of Features": [],
+        "% of Features": [],
         "Folds": [],
         "Feat. Selec. Strategy": [],
+        "Features": [],
+        "Features Importance": [],
         # "Hyper Params.": [],
         "Model": []
     }

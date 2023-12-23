@@ -6,6 +6,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 import utils as ut
 import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
 
 
 # implementar outros classifiers, como SGDClassifier e GradientBoostingClassifier
@@ -13,6 +14,13 @@ def get_models(which_models):
     result = {}
 
     models = {
+        'knn': {
+            KNeighborsClassifier(): {
+                'n_neighbors': [5, 7, 9, 11, 13, 15],
+                'weights': ['uniform', 'distance'],
+                'metric': ['minkowski', 'euclidean', 'manhattan']
+            }
+        },
         'svc': {
             SVC(probability=True): {
                 'C': [0.1, 1, 10],
