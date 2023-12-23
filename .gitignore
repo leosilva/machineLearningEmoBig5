@@ -3,6 +3,7 @@
 
 ### CUSTOM CONFIGURATIONS ###
 dataset/
+*.pkl
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
