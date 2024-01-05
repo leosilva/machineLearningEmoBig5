@@ -22,22 +22,28 @@ logger.setLevel(logging.ERROR)
 datasets = [
     'exported_emo_big5.csv_AgglomerativeClustering_3',
     'exported_emo_big5_norm.csv_KMeans_2_7',
-    'exported_emo_big5.csv_KMeans_2_7'
+    # 'exported_emo_big5.csv_KMeans_2_7'
 ]
 
 perc = [
-    # 10,15,20,25,30,35,40,
-    45,
+    # 10,
+    # 15,
+    # 20,
+    # 25,
+    # 30,
+    # 35,
+    # 40,
+    # 45,
     50,
-    55,
-    60,
-    65,
-    70,
-    75,
-    80,
-    85,
-    90,
-    95
+    # 55,
+    # 60,
+    # 65,
+    # 70,
+    # 75,
+    # 80,
+    # 85,
+    # 90,
+    # 95
 ]
 
 # dataset_filename = 'exported_emo_big5.csv_AgglomerativeClustering_3'
@@ -57,105 +63,92 @@ def run(is_test, is_balance, which_models):
     # result_map = init.get_result_map()
 
     for dataset_filename in datasets:
-        for p in perc:
-            result_map = init.get_result_map()
-            # read files and create corpus
-            data_train = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_train.csv')
-            data_val = rd.create_corpus('dataset/' + dataset_filename + '_test.csv')
+        result_map = init.get_result_map()
+        for e in range(0,5):
+            print("Execution ", (e + 1))
 
-            # [X, y] = vt.tfidf_vectorizer(data_train, ngram)
-            X = pd.DataFrame(data_train[['fear','anger','anticipation','trust','surprise','sadness',
-                                         'disgust','joy','o_score','c_score','e_score','a_score','n_score']])
-            y = pd.DataFrame(data_train['cluster'])
+            for p in perc:
+                # read files and create corpus
+                data_train = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_train.csv')
+                data_val = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_test.csv')
 
-            X_val = pd.DataFrame(data_val[['fear','anger','anticipation','trust','surprise','sadness',
-                                         'disgust','joy','o_score','c_score','e_score','a_score','n_score']])
-            y_val = pd.DataFrame(data_val['cluster'])
+                # [X, y] = vt.tfidf_vectorizer(data_train, ngram)
+                X = pd.DataFrame(data_train[['fear','anger','anticipation','trust','surprise','sadness',
+                                             'disgust','joy','o_score','c_score','e_score','a_score','n_score']])
+                y = pd.DataFrame(data_train['cluster'])
 
-            models = cl.get_models(which_models)
+                X_val = pd.DataFrame(data_val[['fear','anger','anticipation','trust','surprise','sadness',
+                                             'disgust','joy','o_score','c_score','e_score','a_score','n_score']])
+                y_val = pd.DataFrame(data_val['cluster'])
 
-            gc.collect()
-
-            print("Running models...")
-            for item in models.items():
-                hyperparams = item[1]
-                model = item[0]
-                model_name = model.__class__.__name__
+                models = cl.get_models(which_models)
 
                 gc.collect()
 
-                for balance in param_dict['balance']:
-                    if is_balance == 'True':
-                        (X, y) = ba.perform_corpus_balance(X, y, balance)
-                    else:
-                        balance = 'not-balanced'
+                print("Running models...")
+                for item in models.items():
+                    hyperparams = item[1]
+                    model = item[0]
+                    model_name = model.__class__.__name__
 
                     gc.collect()
 
-                    print("Y Cluster")
-                    print(y['cluster'])
-                    print(y['cluster'].value_counts())
-
-                    print("Folding with KFold...")
-                    for f in param_dict['folds']:
-                        random_state = np.random.seed(None)
-                        # random_state = np.random.randint(1, 1000)
-                        # cv = KFold(n_splits=f, shuffle=True)
-
-                        cv = StratifiedKFold(n_splits=f, shuffle=True, random_state=random_state)
-
-                        print("Train test split...")
-                        X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                                            test_size=0.4,
-                                                                            random_state=random_state)
+                    for balance in param_dict['balance']:
+                        if is_balance == 'True':
+                            (X, y) = ba.perform_corpus_balance(X, y, balance)
+                        else:
+                            balance = 'not-balanced'
 
                         gc.collect()
 
-                        # print(y_train['cluster'].value_counts())
-                        print("Y_train Cluster")
-                        print(y_train['cluster'])
-                        print(y_train['cluster'].value_counts())
+                        for i in range(0,10):
+                            print("train_test_split ", (i+1))
+                            for f in param_dict['folds']:
+                                print("Folding with KFold...")
+                                # random_state = np.random.seed(None)
+                                random_state = np.random.randint(1, 1000)
+                                # cv = KFold(n_splits=f, shuffle=True)
 
-                        for train_index, test_index in cv.split(X_train, y_train):
-                            X_train_cv = X_train.iloc[train_index]
-                            X_test_cv = X_train.iloc[test_index]
-                            y_train_cv = y_train.iloc[train_index]
-                            y_test_cv = y_train.iloc[test_index]
+                                cv = StratifiedKFold(n_splits=f, shuffle=True, random_state=random_state)
 
-                            # print(X_train_cv)
-                            print("Y_train_cv Cluster")
-                            print(y_train_cv['cluster'])
-                            print(y_train_cv['cluster'].value_counts())
+                                print("Train test split...")
+                                X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                                                    test_size=0.4,
+                                                                                    random_state=random_state)
 
-                            for fea in param_dict['feature_selection']:
-                                if fea != 'none':
-                                    print("Performing feature selection...")
-                                    for fea_per in param_dict['percentage_features']:
-                                        num_features = int((len(X.columns) * fea_per) / 100)
+                                gc.collect()
 
-                                        for fea_to_include in param_dict["feature_to_include"]:
-                                            # print("features number:", num_features)
+                                # for train_index, test_index in cv.split(X_train, y_train):
+                                #     X_train_cv = X_train.iloc[train_index]
+                                #     X_test_cv = X_train.iloc[test_index]
+                                #     y_train_cv = y_train.iloc[train_index]
+                                #     y_test_cv = y_train.iloc[test_index]
 
-                                            (X_train_cv_selected, X_test_cv_selected) = fs.perform_features_selection(fea, num_features, X_train_cv,
-                                                                                                 X_test,
-                                                                                                 y_train_cv.astype('int'),
-                                                                                                fea_to_include)
+                                for fea in param_dict['feature_selection']:
+                                    if fea != 'none':
+                                        print("Performing feature selection...")
+                                        for fea_per in param_dict['percentage_features']:
+                                            num_features = int((len(X.columns) * fea_per) / 100)
 
-                                            # print("X_val columns: ", X_val.columns)
-                                            print("X_train_cv: ", X_train_cv.columns)
-                                            X_val_cv = X_val[X_train_cv_selected.columns]
-                                            X_test_cv = X_test[X_test_cv_selected.columns]
+                                            for fea_to_include in param_dict["feature_to_include"]:
+                                                (X_train_cv_selected, X_test_cv_selected) = fs.perform_features_selection(fea, num_features, X_train,
+                                                                                                     X_test,
+                                                                                                     y_train.astype('int'),
+                                                                                                    fea_to_include)
 
-                                            run_model(X_test_cv, X_train_cv_selected, X_val_cv, balance, cv, f, fea, fea_per, model, model_name,
-                                                      result_map, y_test, y_train_cv, y_val)
+                                                X_val_cv = X_val[X_train_cv_selected.columns]
+                                                X_test_cv = X_test[X_test_cv_selected.columns]
 
-                                            gc.collect()
+                                                run_model(X_test_cv, X_train_cv_selected, X_val_cv, balance, cv, f, fea, fea_per, model, model_name,
+                                                          result_map, y_test, y_train, y_val, random_state, i, e, hyperparams)
 
-                                else:
-                                    run_model(X_test, X_train_cv, X_val, balance, cv, f, fea, fea_per, model, model_name,
-                                              result_map, y_test, y_train_cv, y_val)
+                                                gc.collect()
 
-                                    gc.collect()
+                                    else:
+                                        run_model(X_test, X_train, X_val, balance, cv, f, fea, fea_per, model, model_name,
+                                                  result_map, y_test, y_train, y_val, random_state, i, e, hyperparams)
+
+                                        gc.collect()
 
             result_df = pd.DataFrame(result_map)
             result_df.sort_values(by='Val. Accuracy', ascending=False, inplace=True)
@@ -172,33 +165,41 @@ def run(is_test, is_balance, which_models):
 
 
 def run_model(X_test_cv, X_train_cv, X_val, balance, cv, f, fea, fea_per, model, model_name, result_map, y_test_cv, y_train_cv,
-              y_val):
+              y_val, random_state, iter, e, hyperparams):
     start = time.time()
-    print("Running model {}".format(model_name))
-    print(X_train_cv.shape)
-    print(y_train_cv.shape)
+    print("Running model ", model_name)
+    # print(X_train_cv.shape)
+    # print(y_train_cv.shape)
+
     model = model.fit(X_train_cv, y_train_cv.astype('int').values.ravel())
+
     gc.collect()
     # grid_search = ut.perform_grid_search(model, hyperparams, cv, X_train_cv, y_train_cv)
     end = time.time()
-    # best_model = grid_search.best_estimator_
+    # model = grid_search.best_estimator_
     print("Training time: {}".format(end - start))
     gc.collect()
+
     start = time.time()
     # print(X_train_cv)
     # print(y_train_cv['cluster'].value_counts())
+
     metrics = cross_validate(estimator=model,
                              X=X_train_cv,
                              y=y_train_cv.astype('int').values.ravel(),
                              cv=cv,
                              scoring=init.get_default_scoring(),
                              error_score="raise")
+
     # print(metrics)
     end = time.time()
     print("Cross validate time: {}".format(end - start))
     test_predictions = model.predict(X_test_cv)
     class_report_dict_test = classification_report(y_test_cv.astype('int'), test_predictions,
                                                    output_dict=True)
+
+    # print(class_report_dict_test)
+
     val_predictions = model.predict(X_val)
     class_report_dict_val = classification_report(y_val.astype('int'), val_predictions,
                                                   output_dict=True)
@@ -234,24 +235,29 @@ def run_model(X_test_cv, X_train_cv, X_val, balance, cv, f, fea, fea_per, model,
     result_map["Bal. Strategy"].append(balance)
     result_map["% of Features"].append(fea_per)
     result_map["Folds"].append(f)
+    result_map["Fold"].append((iter + 1))
+    result_map["Execution"].append((e + 1))
     result_map["Feat. Selec. Strategy"].append(fea)
     result_map["Features"].append(list(X_val.columns))
     result_map["Features Importance"].append(feature_importance)
     # result_map["Hyper Params."].append(grid_search.best_params_)
     result_map["Model"].append(model)
+    result_map["Random State"].append(random_state)
+
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.max_columns', None)
+
     temp_df = pd.DataFrame(result_map)
     print(temp_df.tail(1).T)
-    #
+
     # print(X_test_cv.shape)
     # print(y_test_cv.shape)
     # print(y_test_cv.value_counts())
     # predictions = best_model.predict(X_test_cv)
     # print(classification_report(y_test_cv.astype('int'), predictions))
-    gc.collect()
-    predictions = model.predict(X_test_cv)
-    print(classification_report(y_test_cv.astype('int'), predictions))
+    # gc.collect()
+    # predictions = model.predict(X_test_cv)
+    # print(classification_report(y_test_cv.astype('int'), predictions))
     # print(y_test_cv.value_counts())
 
     gc.collect()
@@ -268,6 +274,9 @@ if __name__ == '__main__':
                         #          'decision-tree', 'mlp-classifier'])
     parser.add_argument("-b", "--is_balance",
                         help="Do you wish the script to perform balance strategies (SMOTE, UnderSampling, etc) for the dataset?")
+
+    parser.add_argument("-s", "--specific_alg",
+                        help="Run?")
 
     args = parser.parse_args()
     config = vars(args)
