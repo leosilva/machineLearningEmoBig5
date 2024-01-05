@@ -81,7 +81,8 @@ def get_models(which_models):
         'decision-tree': {
             DecisionTreeClassifier() : {
                 'max_depth': [3, 5, 10, 20, 50, 100],
-                # 'criterion': ['gini', 'entropy'],
+                'criterion': ['gini', 'entropy'],
+                'min_samples_split': [2, 5, 10, 20, 50],
                 'min_samples_leaf': [5, 10, 20, 50, 100],
                 # 'class_weight': [None, 'balanced']
             }
