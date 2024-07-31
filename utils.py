@@ -3,7 +3,8 @@ import joblib
 import os
 
 
-execution = "percent_execution_50_5_times_v3"
+# CONFIGURAR AQUI A PASTA DE DOS RESULTADOS
+execution = "results"
 
 
 def perform_grid_search(model, params, cv, X_train_selected, y_train_cv):
@@ -25,13 +26,13 @@ def save_df_to_csv(df, folder, p):
     df.to_csv(filename, index=None, sep=',', mode='w')
 
 
-def save_best_model(result_df, folder):
+def save_best_model(result_df, folder, p):
     best_model = result_df.head(1)
     m = best_model['Model'].iloc[0]
     model_name = best_model['Algorithm'].values[0]
 
-    if not os.path.exists('best_models/' + execution + '/' + folder + '/'):
-        os.makedirs('best_models/' + execution + '/' + folder + '/')
+    if not os.path.exists('best_models/' + execution + '/' + str(p) + '/'):
+        os.makedirs('best_models/' + execution + '/' + str(p) + '/')
 
-    filename = 'best_models/' + execution + '/' + folder + '/' + 'best_model_' + model_name + '.pkl'
+    filename = 'best_models/' + execution + '/' + str(p) + '/' + folder + '_' + model_name + '.pkl'
     joblib.dump(m, filename)

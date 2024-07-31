@@ -2,6 +2,7 @@ import read_data as rd
 import vectorizer as vt
 from datetime import datetime, timezone
 import init_config as init
+import sklearn.metrics as me
 import pandas as pd
 import balance_corpus as ba
 import classifiers.classifiers as cl
@@ -19,12 +20,18 @@ import logging
 logger = logging.getLogger('sklearnex')
 logger.setLevel(logging.ERROR)
 
+# -----------------------------------------
+# ESCOLHER AQUI PARA QUAL BASE VAI EXECUTAR
+# -----------------------------------------
 datasets = [
-    'exported_emo_big5.csv_AgglomerativeClustering_3',
+    # 'exported_emo_big5.csv_AgglomerativeClustering_3',
     'exported_emo_big5_norm.csv_KMeans_2_7',
     # 'exported_emo_big5.csv_KMeans_2_7'
 ]
 
+# -------------------------------------------------------------
+# ESCOLHER AQUI QUAL A PORCENTAGEM A SER CONSIDERADA DO DATASET
+# -------------------------------------------------------------
 perc = [
     # 10,
     # 15,
@@ -34,7 +41,7 @@ perc = [
     # 35,
     # 40,
     # 45,
-    50,
+    # 50,
     # 55,
     # 60,
     # 65,
@@ -44,11 +51,8 @@ perc = [
     # 85,
     # 90,
     # 95
+    100
 ]
-
-# dataset_filename = 'exported_emo_big5.csv_AgglomerativeClustering_3'
-# dataset_filename = 'exported_emo_big5_norm.csv_KMeans_2_7'
-# dataset_filename = 'exported_emo_big5.csv_KMeans_2_7'
 
 
 import warnings
@@ -69,8 +73,12 @@ def run(is_test, is_balance, which_models):
 
             for p in perc:
                 # read files and create corpus
-                data_train = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_train.csv')
-                data_val = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_test.csv')
+                if p == 100:
+                    data_train = rd.create_corpus('dataset/' + dataset_filename + '_train.csv')
+                    data_val = rd.create_corpus('dataset/' + dataset_filename + '_test.csv')
+                else:
+                    data_train = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_train.csv')
+                    data_val = rd.create_corpus('dataset/' + dataset_filename + '_' + str(p) + 'perc_test.csv')
 
                 # [X, y] = vt.tfidf_vectorizer(data_train, ngram)
                 X = pd.DataFrame(data_train[['fear','anger','anticipation','trust','surprise','sadness',
@@ -125,6 +133,7 @@ def run(is_test, is_balance, which_models):
                                 #     y_test_cv = y_train.iloc[test_index]
 
                                 for fea in param_dict['feature_selection']:
+                                    # fea_per = 100
                                     if fea != 'none':
                                         print("Performing feature selection...")
                                         for fea_per in param_dict['percentage_features']:
@@ -140,13 +149,13 @@ def run(is_test, is_balance, which_models):
                                                 X_test_cv = X_test[X_test_cv_selected.columns]
 
                                                 run_model(X_test_cv, X_train_cv_selected, X_val_cv, balance, cv, f, fea, fea_per, model, model_name,
-                                                          result_map, y_test, y_train, y_val, random_state, i, e, hyperparams)
+                                                          result_map, y_test, y_train, y_val, random_state, i, e, hyperparams, p)
 
                                                 gc.collect()
 
                                     else:
                                         run_model(X_test, X_train, X_val, balance, cv, f, fea, fea_per, model, model_name,
-                                                  result_map, y_test, y_train, y_val, random_state, i, e, hyperparams)
+                                                  result_map, y_test, y_train, y_val, random_state, i, e, hyperparams, p)
 
                                         gc.collect()
 
@@ -154,7 +163,7 @@ def run(is_test, is_balance, which_models):
             result_df.sort_values(by='Val. Accuracy', ascending=False, inplace=True)
 
             ut.save_df_to_csv(result_df, dataset_filename, p)
-            # ut.save_best_model(result_df, dataset_filename)
+            ut.save_best_model(result_df, dataset_filename, p)
 
     utc_dtf = datetime.now(timezone.utc)
     print("GENERAL ANALYSIS ending at {}".format(utc_dtf.astimezone().isoformat()))
@@ -165,7 +174,7 @@ def run(is_test, is_balance, which_models):
 
 
 def run_model(X_test_cv, X_train_cv, X_val, balance, cv, f, fea, fea_per, model, model_name, result_map, y_test_cv, y_train_cv,
-              y_val, random_state, iter, e, hyperparams):
+              y_val, random_state, iter, e, hyperparams, perc_dataset):
     start = time.time()
     print("Running model ", model_name)
     # print(X_train_cv.shape)
@@ -215,6 +224,8 @@ def run_model(X_test_cv, X_train_cv, X_val, balance, cv, f, fea, fea_per, model,
     result_map["Train Precision"].append(round(np.mean(metrics['test_precision']), 4))
     result_map["Train Recall"].append(round(np.mean(metrics['test_recall']), 4))
     result_map["Train F1 Score"].append(round(np.mean(metrics['test_f1_score']), 4))
+    result_map["Train MSE"].append(round(me.mean_squared_error(y_test_cv, test_predictions), 4))
+
     result_map["Test Accuracy"].append(round(np.mean(class_report_dict_test['accuracy']), 4))
     result_map["Test Precision"].append(
         round(np.mean(class_report_dict_test['weighted avg']['precision']), 4))
@@ -229,11 +240,14 @@ def run_model(X_test_cv, X_train_cv, X_val, balance, cv, f, fea, fea_per, model,
         round(np.mean(class_report_dict_val['weighted avg']['recall']), 4))
     result_map["Val. F1 Score"].append(
         round(np.mean(class_report_dict_val['weighted avg']['f1-score']), 4))
+    result_map["Val. MSE"].append(
+        round(me.mean_squared_error(y_val, val_predictions), 4))
     result_map["AUC"].append(round(np.mean(metrics['test_roc_auc']), 4))
     # result_map["Ngram"].append(ngram)
     # result_map["Vect. Strategy"].append('TF-IDF')
     result_map["Bal. Strategy"].append(balance)
     result_map["% of Features"].append(fea_per)
+    result_map["% of Dataset"].append(perc_dataset)
     result_map["Folds"].append(f)
     result_map["Fold"].append((iter + 1))
     result_map["Execution"].append((e + 1))

@@ -6,13 +6,21 @@ def get_general_parameters(is_test):
         return {
             # "ngram": [(1,2)],
             "balance": [''],
+            # ----------------------------------------------------------------
+            # CONFIGURAR AQUI A PORCENTAGEM DE FEATURES QUE DEVE SER UTILIZADA
             "percentage_features": [
-                # 50,
-                # 60,
-                # 70,
-                # 80,
-                100
+                # 10,
+                # 20,
+                # 30,
+                # 40,
+                50,
+                60,
+                70,
+                80,
+                # 90,
+                # 100
             ],
+            # ----------------------------------------------------------------
             "feature_selection": ['kbest'],
             "folds": [10],
             "feature_to_include": [
@@ -41,6 +49,7 @@ def get_result_map():
         "Train Precision": [],
         "Train Recall": [],
         "Train F1 Score": [],
+        "Train MSE": [],
         "Test Accuracy": [],
         "Test Precision": [],
         "Test Recall": [],
@@ -50,10 +59,12 @@ def get_result_map():
         "Val. Recall": [],
         "Val. F1 Score": [],
         "AUC": [],
+        "Val. MSE": [],
         # "Ngram": [],
         # "Vect. Strategy": [],
         "Bal. Strategy": [],
         "% of Features": [],
+        "% of Dataset": [],
         "Folds": [],
         "Fold": [],
         "Execution": [],
